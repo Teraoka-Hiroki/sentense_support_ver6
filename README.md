@@ -1,4 +1,4 @@
-# setensesport3
+# setensesport4
 
 ## 概要
 軽量な小説の場面の文章支援アプリケーションです。主要な実行ファイルは `app.py`、ロジックは `logic.py` にあります。

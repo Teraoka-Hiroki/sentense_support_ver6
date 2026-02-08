@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量子アニーリング駆動型 小説執筆支援アプリ Ver6</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #1a1f26;
+            font-family: 'Noto Sans JP', sans-serif;
+            color: #e0e0e0;
+        }
+        h2, h4, h5 {
+            color: #e8e8e8;
+            font-weight: 700;
+        }
+        .main-container {
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+        .card-custom {
+            background: #242d3a;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid #3a4552;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            color: #a0a0a0;
+            font-weight: 500;
+            padding: 12px 20px;
+            transition: all 0.3s;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #64b5f6;
+            background: rgba(100, 181, 246, 0.1);
+        }
+        .nav-tabs .nav-link.active {
+            color: #64b5f6;
+            border-bottom: 2px solid #64b5f6;
+            background: transparent;
+        }
+        
+        /* Inputs */
+        .form-control, .form-range {
+            border-radius: 8px;
+            border: 1px solid #3a4552;
+            padding: 10px 15px;
+            background-color: #2c3543;
+            color: #e0e0e0;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25);
+            border-color: #64b5f6;
+            background-color: #2c3543;
+            color: #e0e0e0;
+        }
+        .form-control::placeholder {
+            color: #7a8fa3;
+            opacity: 1;
+        }
+        textarea.auto-expand {
+            overflow-y: hidden;
+            resize: none;
+            min-height: 80px;
+        }
+
+        /* Sliders */
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            margin-bottom: 2px;
+        }
+        .slider-group-title {
+            color: #64b5f6;
+            border-bottom: 1px solid #3a4552;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+
+        /* Candidate Cards */
+        .cluster-header {
+            background: linear-gradient(135deg, #4a7ba7 0%, #5a5a7a 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .card-candidate {
+            border: none;
+            border-radius: 10px;
+            background: #2c3543;
+            transition: all 0.2s;
+            border-left: 5px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            color: #e0e0e0;
+            position: relative;
+        }
+        .card-candidate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(64, 181, 246, 0.2);
+        }
+        .card-candidate.optimized-selected {
+            border-left-color: #64b5f6;
+            background-color: #1e3a52;
+        }
+        
+        /* Badges */
+        .section-badge {
+            font-size: 0.75em;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
+            background-color: #4a5568;
+        }
+        .badge-scene { background-color: #4a8c5e; }
+        .badge-char { background-color: #8a6b4a; }
+
+        /* Rating Radio Buttons */
+        .rating-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #1a1f26;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .rating-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-right: 5px;
+        }
+        .form-check-input:checked {
+            background-color: #64b5f6;
+            border-color: #64b5f6;
+        }
+
+        /* Buttons */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(100, 181, 246, 0.3);
+            color: #fff;
+        }
+        .btn-primary-custom:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        /* Loading */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 31, 38, 0.95);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        /* Final Editor */
+        #finalEditor {
+            background-color: #1e2a35;
+            color: #b0d4f1;
+            font-family: 'Consolas', monospace;
+            line-height: 1.6;
+            border: 1px solid #3a4552;
+        }
+        
+        /* Adjustments */
+        .accordion-button {
+            background-color: #2c3543;
+            color: #e0e0e0;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #34404f;
+            color: #64b5f6;
+        }
+        .accordion-item {
+            background-color: transparent;
+            border: 1px solid #3a4552;
+        }
+        .accordion-body {
+            background-color: transparent;
+            border-top: 1px solid #3a4552;
+            color: #e0e0e0;
+        }
+        
+        .bbo-panel {
+            background: linear-gradient(to right, #2c3543, #34404f);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3a4552;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h4 class="mt-4 text-secondary" id="loadingText">Processing...</h4>
+</div>
+
+<div class="main-container">
+    <div class="text-center mb-5">
+        <h2><i class="bi bi-stars text-primary"></i> 量子アニーリング駆動型 小説執筆支援アプリ <span class="badge bg-primary rounded-pill fs-6 align-top">Ver.6</span></h2>
+        <p class="text-muted">Novel Writing Support with Human-in-the-Loop Black-Box Optimization</p>
+    </div>
+
+    <div class="card-custom">
+        <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button">1. 設定 & 生成</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button">2. 最適化 (BBO)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button">3. 推敲前出力</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab4-tab" data-bs-toggle="tab" data-bs-target="#tab4" type="button">4. 最終出力</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <!-- Tab 1: 設定 -->
+            <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+                
+                <div class="accordion mb-4 shadow-sm" id="apiAccordion">
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApi">
+                                <i class="bi bi-key me-2"></i> API Key Settings
+                            </button>
+                        </h2>
+                        <div id="collapseApi" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Gemini API Key</label>
+                                    <input type="password" class="form-control" id="geminiKey" placeholder="Gemini API Key を入力" value="{{ state.gemini_key }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Fixstars Amplify Token</label>
+                                    <input type="password" class="form-control" id="amplifyToken" placeholder="Fixstars Amplify Token を入力" value="{{ state.amplify_token }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="mb-3"><i class="bi bi-book me-2"></i>小説の場面設定</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">設定 1 (必須) <span class="text-danger">*</span></label>
+                        <textarea class="form-control auto-expand" id="topicMain" rows="2" placeholder="例: 廃墟となった遊園地で、主人公が失われた記憶の手がかりを探している。">{{ state.topic_main }}</textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">設定 2 (任意)</label>
+                            <textarea class="form-control auto-expand" id="topicSub1" rows="2" placeholder="例: 雨が降り続いており、視界が悪い。遠くでサイレンが聞こえる。">{{ state.topic_sub1 }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">設定 3 (任意)</label>
+                            <textarea class="form-control auto-expand" id="topicSub2" rows="2" placeholder="例: 主人公は古い懐中時計を握りしめている。">{{ state.topic_sub2 }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                
+                <div class="row">
+                    <!-- Scene Craft -->
+                    <div class="col-md-6">
+                        <h6 class="slider-group-title"><i class="bi bi-palette me-2"></i>シーン・クラフト (描写・演出)</h6>
+                        
+                        <div class="mb-3">
+                            <div class="slider-label"><span>説明的</span><span>描写的</span></div>
+                            <input type="range" class="form-range" id="pDescStyle" min="0" max="1" step="0.1" value="{{ state.params.p_desc_style }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>第3者的</span><span>当事者的 (没入)</span></div>
+                            <input type="range" class="form-range" id="pPerspective" min="0" max="1" step="0.1" value="{{ state.params.p_perspective }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>視覚以外の臨場感: 少</span><span>多</span></div>
+                            <input type="range" class="form-range" id="pSensory" min="0" max="1" step="0.1" value="{{ state.params.p_sensory }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>思考の開示: しない</span><span>する</span></div>
+                            <input type="range" class="form-range" id="pThought" min="0" max="1" step="0.1" value="{{ state.params.p_thought }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>会話の緊張感: 弱</span><span>強</span></div>
+                            <input type="range" class="form-range" id="pTension" min="0" max="1" step="0.1" value="{{ state.params.p_tension }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>場面状況: 現実的</span><span>空想的</span></div>
+                            <input type="range" class="form-range" id="pReality" min="0" max="1" step="0.1" value="{{ state.params.p_reality }}">
+                        </div>
+                    </div>
+
+                    <!-- Character Dynamics -->
+                    <div class="col-md-6">
+                        <h6 class="slider-group-title"><i class="bi bi-people me-2"></i>キャラクター・ダイナミクス</h6>
+                        
+                        <div class="mb-3">
+                            <div class="slider-label"><span>登場人物: 0人</span><span>5人</span></div>
+                            <input type="range" class="form-range" id="pCharCount" min="0" max="1" step="0.2" value="{{ state.params.p_char_count }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>精神性: 弱い</span><span>強い</span></div>
+                            <input type="range" class="form-range" id="pCharMental" min="0" max="1" step="0.1" value="{{ state.params.p_char_mental }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>信念: 病的</span><span>健康</span></div>
+                            <input type="range" class="form-range" id="pCharBelief" min="0" max="1" step="0.1" value="{{ state.params.p_char_belief }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>過去の因縁: なし</span><span>あり (トラウマ)</span></div>
+                            <input type="range" class="form-range" id="pCharTrauma" min="0" max="1" step="0.1" value="{{ state.params.p_char_trauma }}">
+                        </div>
+                        <div class="mb-3">
+                            <div class="slider-label"><span>ボイス(癖): 弱い</span><span>強い</span></div>
+                            <input type="range" class="form-range" id="pCharVoice" min="0" max="1" step="0.1" value="{{ state.params.p_char_voice }}">
+                        </div>
+                        
+                        <div class="mt-4 pt-2 border-top border-secondary">
+                             <label class="form-label d-flex justify-content-between fw-bold"><span>出力文字数目安</span> <span class="badge bg-secondary" id="lengthVal">{{ state.params.length }}字</span></label>
+                            <input type="range" class="form-range" id="pLength" min="200" max="1000" step="50" value="{{ state.params.length }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 text-center">
+                    <button class="btn btn-primary btn-primary-custom text-white" onclick="generateCandidates()">
+                        <i class="bi bi-lightning-charge me-2"></i>候補要素を生成 (各15個)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2: 最適化 -->
+            <div class="tab-pane fade" id="tab2" role="tabpanel">
+                <div class="bbo-panel mb-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0 text-primary"><i class="bi bi-person-bounding-box"></i> Human-in-the-Loop Optimization</h5>
+                        <button class="btn btn-outline-danger btn-sm" onclick="resetBBO()">
+                            <i class="bi bi-arrow-counterclockwise"></i> 学習リセット
+                        </button>
+                    </div>
+                    <p class="small text-light mb-3">
+                        生成された文章ブロックについて、あなたの意図に合うかどうか評価（1:採用しない ～ 5:採用する）を選択してください。<br>
+                        評価を入力後、「学習して最適化」ボタンを押すと、AIが好みを学習し、量子アニーリングで最適な組み合わせを提案します。
+                    </p>
+                    <div class="text-end">
+                        <button class="btn btn-success px-4" onclick="runBBOIteration()">
+                            <i class="bi bi-send-check me-2"></i>評価を学習して最適化
+                        </button>
+                    </div>
+                    <div class="mt-2 text-end">
+                         <span class="badge bg-secondary" id="bboHistoryCount">学習データ数: {{ state.bbo_history | length }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <div>
+                        <h5 class="mb-0">候補ブロック一覧</h5>
+                        <small class="text-muted">左側の青いバーが表示されているものが、現在AIが推奨する最適解です。</small>
+                    </div>
+                    <button class="btn btn-outline-secondary rounded-pill btn-sm" onclick="runOptimizationLegacy()">
+                        <i class="bi bi-cpu me-1"></i> パラメータのみで最適化 (評価なし)
+                    </button>
+                </div>
+                
+                <div id="candidatesContainer"></div>
+            </div>
+
+            <!-- Tab 3: 推敲前出力 -->
+            <div class="tab-pane fade" id="tab3" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5>Draft Generation</h5>
+                    <button class="btn btn-info text-white rounded-pill px-4" onclick="generateDraft()">
+                        <i class="bi bi-pencil-square me-2"></i>文章生成を実行
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small">1. 概要・プロット案</label>
+                    <textarea class="form-control auto-expand" id="draftSummary" readonly>{{ state.draft_summary }}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small">2. 生成された場面文章 (編集可能)</label>
+                    <textarea class="form-control auto-expand" id="draftArticle" style="min-height: 200px;">{{ state.draft_article }}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small">3. Final Stepへの指示</label>
+                    <textarea class="form-control auto-expand" id="addInstruction" placeholder="例：心理描写をもっと深く、文体をハードボイルドに...">{{ state.additional_instruction }}</textarea>
+                </div>
+            </div>
+
+            <!-- Tab 4: 最終出力 -->
+            <div class="tab-pane fade" id="tab4" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5>Final Output</h5>
+                    <div>
+                        <a href="/download" class="btn btn-outline-secondary rounded-pill me-2">
+                            <i class="bi bi-download me-1"></i> 保存
+                        </a>
+                        <button class="btn btn-warning rounded-pill text-dark" onclick="generateFinal()">
+                            <i class="bi bi-magic me-1"></i> 最終生成を実行
+                        </button>
+                    </div>
+                </div>
+                <textarea class="form-control auto-expand" id="finalEditor">{{ state.final_text }}</textarea>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/main.js"></script>
+<script>
+    // 初期化データ
+    window.initialCandidates = {{ state.candidates | tojson }};
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCandidates(window.initialCandidates);
+        
+        // スライダー連動
+        document.getElementById('pLength').addEventListener('input', (e) => {
+            document.getElementById('lengthVal').textContent = e.target.value + '文字';
+        });
+
+        // テキストエリア自動拡張の適用
+        document.querySelectorAll('textarea.auto-expand').forEach(textarea => {
+            autoResize(textarea);
+            textarea.addEventListener('input', function() {
+                autoResize(this);
+            });
+        });
+    });
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = (el.scrollHeight + 2) + 'px';
+    }
+</script>
+</body>
+</html>
